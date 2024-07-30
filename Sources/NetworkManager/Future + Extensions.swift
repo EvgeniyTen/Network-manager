@@ -1,6 +1,5 @@
 import Combine
 
-@available(iOS 15.0, *)
 extension Future where Failure == Error {
     convenience init(operation: @escaping () async throws -> Output) {
         self.init { promise in

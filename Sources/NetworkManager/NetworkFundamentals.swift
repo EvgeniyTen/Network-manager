@@ -1,6 +1,11 @@
 import Foundation
 
 public enum Network {
+    public enum MultipartHTTPMethod: String {
+        case post = "POST"
+        case put = "PUT"
+    }
+    
     public enum HTTPMethod: String {
         case get = "GET"
         case post = "POST"
@@ -208,7 +213,6 @@ public enum Network {
     public struct Refresh {
         let status: Network.Status
         let action: () async throws -> Void
-        
         public init(status: Network.Status, action: @escaping () async throws -> Void) {
             self.status = status
             self.action = action

@@ -1,7 +1,6 @@
 import Foundation
 import Combine
 
-@available(iOS 15.0.0, *)
 public protocol NetworkServiceProtocol: NSObjectProtocol {
     /**
      This method creates request builder
@@ -15,8 +14,29 @@ public protocol NetworkServiceProtocol: NSObjectProtocol {
      let builder = try self.build("path/to/", .get)
      ```
      */
-    func build(path: String, method: Network.HTTPMethod) throws -> RequestBuilderProtocol
+    func build(
+        path: String,
+        method: Network.HTTPMethod
+    ) throws -> BodyableRequestBuilderProtocol
 
+    /**
+     This method creates request builder
+     - parameter path: path relative to baseURL
+     - parameter fileURL: path to user data
+     - parameter method: only POST
+     - returns: request builder
+     - throws : Network.Error
+     
+     # Example #
+     ```
+     let builder = try self.build("path/to/", fileURL: URL)
+     ```
+     */
+    func build(
+        path: String,
+        fileURL: URL,
+        method: Network.MultipartHTTPMethod
+    ) throws -> RequestBuilderProtocol
     /**
      This method requests data via Network
      - parameter request: url request
@@ -53,7 +73,6 @@ public protocol NetworkServiceProtocol: NSObjectProtocol {
                                decoder: DataDecoderProtocol) async throws -> R
 }
 
-@available(iOS 15.0.0, *)
 public extension NetworkServiceProtocol {
     /**
      This method requests data via Network
@@ -89,7 +108,6 @@ public extension NetworkServiceProtocol {
     }
 }
 
-@available(iOS 15.0.0, *)
 public extension NetworkServiceProtocol {
     @discardableResult
     func request(request: URLRequest) async throws -> Data {

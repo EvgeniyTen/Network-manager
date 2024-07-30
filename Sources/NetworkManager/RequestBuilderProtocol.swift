@@ -1,8 +1,25 @@
 import Foundation
 import Combine
 
-@available(iOS 15.0.0, *)
+public protocol BodyableRequestBuilderProtocol: RequestBuilderProtocol {
+    /**
+     Adds body to request
+     - parameter body: Encodable type
+     - parameter encoder: Encoder to encode body
+     - returns: Self
+     
+     # Example #
+     ```
+     self.body("some value", JSONEncoder())
+     ```
+     **/
+    @discardableResult
+    func body(_ body: Encodable, encoder: DataEncoderProtocol) throws -> RequestBuilderProtocol
+}
+
 public protocol RequestBuilderProtocol {
+    var httpMethod: Network.HTTPMethod { get }
+    var urlRequest: URLRequest { get }
     /**
      Adds query items to request
      - parameter items: array of url params
@@ -30,19 +47,6 @@ public protocol RequestBuilderProtocol {
      **/
     @discardableResult
     func headers(_ headers: [Network.HTTPHeader: String]) -> Self
-    /**
-     Adds body to request
-     - parameter body: Encodable type
-     - parameter encoder: Encoder to encode body
-     - returns: Self
-     
-     # Example #
-     ```
-     self.body("some value", JSONEncoder())
-     ```
-     **/
-    @discardableResult
-    func body(_ body: Encodable, encoder: DataEncoderProtocol) throws -> Self
 
     /**
      Adds modifier
@@ -82,8 +86,7 @@ public protocol RequestBuilderProtocol {
     func request<R: Decodable>(decoder: DataDecoderProtocol) async throws -> R
 }
 
-@available(iOS 15.0.0, *)
-public extension RequestBuilderProtocol {
+public extension BodyableRequestBuilderProtocol {
     /**
      Adds body to request
      - parameter body: Encodable type with default JSONEncoder
@@ -95,10 +98,12 @@ public extension RequestBuilderProtocol {
      ```
      **/
     @discardableResult
-    func body(_ body: Encodable) throws -> Self {
+    func body(_ body: Encodable) throws -> RequestBuilderProtocol {
         try self.body(body, encoder: JSONEncoder())
     }
+}
 
+public extension RequestBuilderProtocol {
     /**
      Request data via network, using setted params
      

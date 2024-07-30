@@ -1,14 +1,11 @@
 import Foundation
 import Combine
 
-
-@available(iOS 15.0, *)
 public final class NetworkService: NSObject, NetworkServiceProtocol {
     private let baseURL: String
     private let session: URLSession
     private let refresh: Network.Refresh?
     private var refeshTask: Task<Void, Error>?
-
     /**
      This class requests data via UrlSession
      - parameter baseURL: base url, must соntain protocol and host; can contain path
@@ -24,11 +21,27 @@ public final class NetworkService: NSObject, NetworkServiceProtocol {
 
     // MARK: NetworkServiceProtocol
 
-    public func build(path: String, method: Network.HTTPMethod) throws -> RequestBuilderProtocol {
-        try Network.RequestBuilder(client: self,
+    public func build(
+        path: String,
+        method: Network.HTTPMethod
+    ) throws -> BodyableRequestBuilderProtocol {
+        try Network.BodyableRequestBuilder(client: self,
                                    baseURL: baseURL,
                                    method: method,
                                    path: path)
+    }
+
+    public func build(
+        path: String,
+        fileURL: URL,
+        method: Network.MultipartHTTPMethod = .post
+    ) throws -> RequestBuilderProtocol {
+        try Network.RequestBuilder(client: self,
+                                   baseURL: baseURL,
+                                   method: method,
+                                   fileURL: fileURL,
+                                   path: path
+        )
     }
 
     public func request(request: URLRequest, withRefresh: Bool) async throws -> Data {
@@ -43,13 +56,15 @@ public final class NetworkService: NSObject, NetworkServiceProtocol {
             return data
         case refresh?.status.value where refresh?.status.value != nil && withRefresh == true:
             if refeshTask == nil {
-                 refeshTask = Task {
-                     try await refresh?.action()
-                     refeshTask = nil
-                 }
-             }
-             try await refeshTask!.value
-             return try await self.request(request: request, withRefresh: false)
+                refeshTask = Task {
+                    try await refresh?.action()
+                    refeshTask = nil
+                }
+            }
+            // swiftlint: disable force_unwrapping
+            try await refeshTask!.value
+            // swiftlint: enable force_unwrapping
+            return try await self.request(request: request, withRefresh: false)
         default:
             throw Network.Error.serverStatusData(
                 status: Network.Status(rawValue: response.statusCode),
